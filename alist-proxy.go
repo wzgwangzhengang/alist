@@ -142,6 +142,9 @@ func downHandle(w http.ResponseWriter, r *http.Request) {
 		errorResponse(w, 500, err.Error())
 		return
 	}
+	for h, v := range res.Header {
+		w.Header()[h] = v
+	}
 	_, err = io.Copy(w, res.Body)
 	if err != nil {
 		errorResponse(w, 500, err.Error())
@@ -156,12 +159,18 @@ func apiHandle(w http.ResponseWriter, r *http.Request) {
 		errorResponse(w, 500, err.Error())
 		return
 	}
-	r.URL = u
-	r.Host = u.Host
-	res, err := HttpClient.Do(r)
+	req, _ := http.NewRequest(r.Method, targetUrl, nil)
+	for h, val := range r.Header {
+		req.Header[h] = val
+	}
+	req.Host = u.Host
+	res, err := HttpClient.Do(req)
 	if err != nil {
 		errorResponse(w, 500, err.Error())
 		return
+	}
+	for h, v := range res.Header {
+		w.Header()[h] = v
 	}
 	_, err = io.Copy(w, res.Body)
 	if err != nil {
